@@ -14,3 +14,6 @@
 	path = modules/clap-juce-extensions
 	url = https://github.com/free-audio/clap-juce-extensions.git
 	branch = main
+[submodule "vendor/SDL"]
+	path = vendor/SDL
+	url = https://github.com/relascope/SDL.git
