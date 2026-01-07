@@ -135,6 +135,17 @@ target_compile_definitions(SharedCode
     PRODUCT_NAME_WITHOUT_VERSION="Pamplejuce"
 )
 
+# Add SDL
+set(SDL_SHARED OFF CACHE BOOL "" FORCE)
+set(SDL_STATIC ON CACHE BOOL "" FORCE)
+set(SDL_TEST OFF CACHE BOOL "" FORCE)
+add_subdirectory(vendor/SDL EXCLUDE_FROM_ALL)
+
+target_include_directories(SharedCode
+        INTERFACE
+        ${CMAKE_CURRENT_SOURCE_DIR}/vendor/SDL/include
+)
+
 # Link to any other modules you added (with juce_add_module) here!
 # Usually JUCE modules must have PRIVATE visibility
 # See https://github.com/juce-framework/JUCE/blob/master/docs/CMake%20API.md#juce_add_module
@@ -151,7 +162,8 @@ target_link_libraries(SharedCode
     juce_gui_extra
     juce::juce_recommended_config_flags
     juce::juce_recommended_lto_flags
-    juce::juce_recommended_warning_flags)
+    juce::juce_recommended_warning_flags
+    SDL3::SDL3-static)
 
 # Link the JUCE plugin targets our SharedCode target
 target_link_libraries("${PROJECT_NAME}" PRIVATE SharedCode)
