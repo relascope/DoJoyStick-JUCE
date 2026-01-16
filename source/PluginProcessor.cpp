@@ -122,7 +122,10 @@ bool PluginProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
 void PluginProcessor::processBlock (juce::AudioBuffer<float>& buffer,
                                               juce::MidiBuffer& midiMessages)
 {
-    juce::ignoreUnused (midiMessages);
+
+
+        // Adding at offset 0 is fine for "immediate" triggers
+    midiMessages.addEvent(juce::MidiMessage::noteOn(1, 66, (juce::uint8)127), 0);
 
     // Joystick to MIDI mapping
     if (joyStickGateway.getNumJoysticks() > 0)
