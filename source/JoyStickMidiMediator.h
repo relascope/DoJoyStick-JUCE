@@ -7,7 +7,12 @@
 class JoyStickMidiMediator : public JoyStickGateway::Listener
 {
 public:
-    JoyStickMidiMediator (JoyStickMapper& m) : mapper (m) {}
+    JoyStickMidiMediator (JoyStickMapper& m) : mapper (m)
+    {
+        // Create a virtual MIDI out port that other apps can see
+        // This works on macOS. On Windows, it returns nullptr (requires a driver like loopMIDI)
+        virtualMidiOutput = juce::MidiOutput::createNewDevice ("DoJoyStick Port");
+    }
 
     void buttonChanged (int /*jid*/, int buttonIndex, bool isDown) override
     {
@@ -18,8 +23,12 @@ public:
                 auto msg = isDown ? juce::MidiMessage::noteOn (1, m.midiNote, (juce::uint8)127)
                                   : juce::MidiMessage::noteOff (1, m.midiNote, (juce::uint8)0);
                 
-                // Real-time safe: pushes to an internal FIFO
+                // 1. Send to the Plugin/Standalone buffer (for the current host)
                 messageCollector.addMessageToQueue (msg);
+
+                // 2. Send to the Virtual System Port (for MuseScore/Logic External)
+                if (virtualMidiOutput != nullptr)
+                    virtualMidiOutput->sendMessageNow (msg);
             }
         }
     }
@@ -42,4 +51,5 @@ public:
 private:
     JoyStickMapper& mapper;
     juce::MidiMessageCollector messageCollector;
+    std::unique_ptr<juce::MidiOutput> virtualMidiOutput;
 };
