@@ -3,6 +3,7 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 #include "JoyStickGateway.h"
 #include "JoyStickMapper.h"
+#include "JoyStickMidiMediator.h"
 
 #if (MSVC)
 #include "ipps.h"
@@ -43,6 +44,7 @@ public:
 private:
     JoyStickGateway joyStickGateway;
     JoyStickMapper joyStickMapper;
+    JoyStickMidiMediator joyStickMediator { joyStickMapper };
     std::vector<bool> lastButtonStates;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PluginProcessor)

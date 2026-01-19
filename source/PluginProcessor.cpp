@@ -12,10 +12,12 @@ PluginProcessor::PluginProcessor()
                      #endif
                        )
 {
+    joyStickGateway.addListener (&joyStickMediator);
 }
 
 PluginProcessor::~PluginProcessor()
 {
+    joyStickGateway.removeListener (&joyStickMediator);
 }
 
 //==============================================================================
@@ -86,9 +88,8 @@ void PluginProcessor::changeProgramName (int index, const juce::String& newName)
 //==============================================================================
 void PluginProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
-    // Use this method as the place to do any pre-playback
-    // initialisation that you need..
-    juce::ignoreUnused (sampleRate, samplesPerBlock);
+    joyStickMediator.prepare (sampleRate);
+    juce::ignoreUnused (samplesPerBlock);
 }
 
 void PluginProcessor::releaseResources()
@@ -120,43 +121,9 @@ bool PluginProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
 }
 
 void PluginProcessor::processBlock (juce::AudioBuffer<float>& buffer,
-                                              juce::MidiBuffer& midiMessages)
+                                                  juce::MidiBuffer& midiMessages)
 {
-
-
-        // Adding at offset 0 is fine for "immediate" triggers
-    midiMessages.addEvent(juce::MidiMessage::noteOn(1, 66, (juce::uint8)127), 0);
-
-    // Joystick to MIDI mapping
-    if (joyStickGateway.getNumJoysticks() > 0)
-    {
-        const auto& mappings = joyStickMapper.getMappings();
-        
-        // Ensure we have enough space for button states tracking
-        int maxButtonIndex = 0;
-        for (const auto& mapping : mappings)
-            maxButtonIndex = std::max(maxButtonIndex, mapping.buttonIndex);
-        
-        if ((int)lastButtonStates.size() <= maxButtonIndex)
-            lastButtonStates.resize(maxButtonIndex + 1, false);
-
-        for (const auto& mapping : mappings)
-        {
-            bool isDown = joyStickGateway.isButtonDown(0, mapping.buttonIndex);
-            if (isDown != lastButtonStates[mapping.buttonIndex])
-            {
-                if (isDown)
-                {
-                    midiMessages.addEvent(juce::MidiMessage::noteOn(1, mapping.midiNote, (juce::uint8)127), 0);
-                }
-                else
-                {
-                    midiMessages.addEvent(juce::MidiMessage::noteOff(1, mapping.midiNote, (juce::uint8)0), 0);
-                }
-                lastButtonStates[mapping.buttonIndex] = isDown;
-            }
-        }
-    }
+    joyStickMediator.collectPendingMessages (midiMessages, buffer.getNumSamples());
 
     juce::ScopedNoDenormals noDenormals;
     auto totalNumInputChannels  = getTotalNumInputChannels();

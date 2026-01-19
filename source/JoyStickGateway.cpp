@@ -1,63 +1,63 @@
 #include "JoyStickGateway.h"
-
-#include "SDL3/SDL_init.h"
 #include "SDL3/SDL.h"
-
-#include <iostream>
 
 JoyStickGateway::JoyStickGateway()
 {
-    if (SDL_Init(SDL_INIT_JOYSTICK) < 0)
-    {
-        std::cerr << "SDL could not initialize! SDL_Error: " << SDL_GetError() << std::endl;
-        return;
-    }
-    sdlInitialized = true;
+    if (SDL_Init (SDL_INIT_JOYSTICK | SDL_INIT_EVENTS))
+        sdlInitialized = true;
 
-    if (!SDL_HasJoystick())
-        throw "BLA";
-
-    // int numJoysticks = SDL_NumJoysticks();
-    // for (int i = 0; i < numJoysticks; ++i)
-    // {
-    //     SDL_Joystick* joystick = SDL_JoystickOpen(i);
-    //     if (joystick)
-    //     {
-    //         openJoysticks.push_back(joystick);
-    //     }
-    // }
+    startTimer (5); // Poll every 5ms on the Main/Message thread
 }
 
 JoyStickGateway::~JoyStickGateway()
 {
+    stopTimer();
     closeJoysticks();
     if (sdlInitialized)
+        SDL_QuitSubSystem (SDL_INIT_JOYSTICK | SDL_INIT_EVENTS);
+}
+
+void JoyStickGateway::timerCallback()
+{
+    SDL_Event event;
+    while (SDL_PollEvent (&event))
     {
-        SDL_QuitSubSystem(SDL_INIT_JOYSTICK);
+        if (event.type == SDL_EVENT_JOYSTICK_ADDED)
+        {
+            if (auto* joystick = SDL_OpenJoystick (event.jdevice.which))
+            {
+                openJoysticks.push_back (joystick);
+                listeners.call (&Listener::joystickAdded, (int) openJoysticks.size() - 1, SDL_GetJoystickName (joystick));
+            }
+        }
+        else if (event.type == SDL_EVENT_JOYSTICK_REMOVED)
+        {
+            if (auto* removed = SDL_GetJoystickFromID (event.jdevice.which))
+            {
+                auto it = std::find (openJoysticks.begin(), openJoysticks.end(), removed);
+                if (it != openJoysticks.end())
+                {
+                    int index = (int) std::distance (openJoysticks.begin(), it);
+                    SDL_CloseJoystick (*it);
+                    openJoysticks.erase (it);
+                    listeners.call (&Listener::joystickRemoved, index);
+                }
+            }
+        }
+        else if (event.type == SDL_EVENT_JOYSTICK_BUTTON_DOWN || event.type == SDL_EVENT_JOYSTICK_BUTTON_UP)
+        {
+            bool isDown = (event.type == SDL_EVENT_JOYSTICK_BUTTON_DOWN);
+            listeners.call (&Listener::buttonChanged, 0, (int) event.jbutton.button, isDown);
+        }
     }
 }
 
 void JoyStickGateway::closeJoysticks()
 {
     for (auto* joystick : openJoysticks)
-    {
-    //     if (SDL_JoystickGetAttached(joystick))
-    //     {
-    //         SDL_JoystickClose(joystick);
-    //     }
-    }
+        SDL_CloseJoystick(joystick);
+    
     openJoysticks.clear();
-}
-
-bool JoyStickGateway::isButtonDown(int joystickIndex, int buttonIndex) const
-{
-    if (joystickIndex < 0 || joystickIndex >= (int)openJoysticks.size())
-        return false;
-
-    // SDL_JoystickUpdate();
-    // return SDL_JoystickGetButton(openJoysticks[joystickIndex], buttonIndex) != 0;
-
-    return true;
 }
 
 int JoyStickGateway::getNumJoysticks() const
@@ -67,10 +67,8 @@ int JoyStickGateway::getNumJoysticks() const
 
 std::string JoyStickGateway::getJoystickName(int index) const
 {
-    if (index < 0 || index >= (int)openJoysticks.size())
-        return "";
-
-    // return SDL_JoystickName(openJoysticks[index]);
-
-    return "HELLO";
+    if (index >= 0 && index < (int)openJoysticks.size())
+        return SDL_GetJoystickName(openJoysticks[index]);
+    else
+        return "Invalid joystick index";
 }
