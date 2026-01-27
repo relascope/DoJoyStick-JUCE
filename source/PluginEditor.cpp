@@ -27,7 +27,8 @@ PluginEditor::PluginEditor (PluginProcessor& p)
     : AudioProcessorEditor (&p), processorRef (p)
 {
     juce::ignoreUnused (processorRef);
-
+    
+    #ifdef DEBUG
     addAndMakeVisible (inspectButton);
 
     // this chunk of code instantiates and opens the melatonin inspector
@@ -40,6 +41,7 @@ PluginEditor::PluginEditor (PluginProcessor& p)
 
         inspector->setVisible (true);
     };
+    #endif
 
     addMidiCondiguration();
 
