@@ -41,6 +41,8 @@ public:
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
 
+    JoyStickMidiMediator& getMidiMediator() { return joyStickMediator; }
+
 private:
     JoyStickGateway joyStickGateway;
     JoyStickMapper joyStickMapper;

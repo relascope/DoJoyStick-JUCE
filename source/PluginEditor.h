@@ -8,6 +8,7 @@
 class PluginEditor : public juce::AudioProcessorEditor
 {
 public:
+    void addMidiCondiguration();
     explicit PluginEditor (PluginProcessor&);
     ~PluginEditor() override;
 
@@ -21,5 +22,10 @@ private:
     PluginProcessor& processorRef;
     std::unique_ptr<melatonin::Inspector> inspector;
     juce::TextButton inspectButton { "Inspect the UI" };
+
+    juce::GroupComponent midiConfigGroup { "midiConfigGroup", "Midi Configuration" };
+    juce::ToggleButton sendToSeparateDevice { "Send to Separate Device" };
+    juce::ToggleButton sendToMidiPort { "Send to Midi Port" };
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PluginEditor)
 };

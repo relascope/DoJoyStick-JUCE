@@ -14,6 +14,16 @@ public:
         virtualMidiOutput = juce::MidiOutput::createNewDevice ("DoJoyStick Port");
     }
 
+    void sendMidiMessage(juce::MidiMessage msg)
+    {
+        // 1. Send to the Plugin/Standalone buffer (for the current host)
+        if (sendToMidiPort)
+            messageCollector.addMessageToQueue(msg);
+
+        // 2. Send to the Virtual System Port (for MuseScore/Logic External)
+        if (sendToSeparateDevice && virtualMidiOutput != nullptr)
+            virtualMidiOutput->sendMessageNow(msg);
+    }
     void buttonChanged (int /*jid*/, int buttonIndex, bool isDown) override
     {
         for (const auto& m : mapper.getMappings())
@@ -23,12 +33,7 @@ public:
                 auto msg = isDown ? juce::MidiMessage::noteOn (1, m.midiNote, (juce::uint8)127)
                                   : juce::MidiMessage::noteOff (1, m.midiNote, (juce::uint8)0);
                 
-                // 1. Send to the Plugin/Standalone buffer (for the current host)
-                messageCollector.addMessageToQueue (msg);
-
-                // 2. Send to the Virtual System Port (for MuseScore/Logic External)
-                if (virtualMidiOutput != nullptr)
-                    virtualMidiOutput->sendMessageNow (msg);
+                sendMidiMessage(msg);
             }
         }
     }
@@ -48,8 +53,16 @@ public:
         messageCollector.removeNextBlockOfMessages (dest, numSamples);
     }
 
+    void setSendToMidiPort (bool shouldSend) { sendToMidiPort = shouldSend; }
+    bool isSendingToMidiPort() const { return sendToMidiPort; }
+
+    void setSendToSeparateDevice (bool shouldSend) { sendToSeparateDevice = shouldSend; }
+    bool isSendingToSeparateDevice() const { return sendToSeparateDevice; }
+
 private:
     JoyStickMapper& mapper;
     juce::MidiMessageCollector messageCollector;
     std::unique_ptr<juce::MidiOutput> virtualMidiOutput;
+    bool sendToMidiPort = true;
+    bool sendToSeparateDevice = true;
 };
