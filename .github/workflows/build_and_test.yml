@@ -192,7 +192,9 @@ jobs:
           ln -s /Applications "dmg/Applications"
           ln -s /Library/Audio/Plug-Ins/Components "dmg/Your Mac's Component Folder"
           ln -s /Library/Audio/Plug-Ins/VST3 "dmg/Your Mac's VST3 Folder"
-          dmgbuild -s packaging/dmg.json "${{ env.PRODUCT_NAME }}" "packaging/${{ env.ARTIFACT_NAME }}.dmg"
+          cd packaging
+          dmgbuild -s dmg.json "${{ env.PRODUCT_NAME }}" "${{ env.ARTIFACT_NAME }}.dmg"
+          cd ..
 
       - name: Zip
         if: ${{ matrix.name == 'Linux' }}
