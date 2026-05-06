@@ -65,7 +65,7 @@ jobs:
           wget -O- https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB | gpg --dearmor | sudo tee /usr/share/keyrings/oneapi-archive-keyring.gpg > /dev/null
           echo "deb [signed-by=/usr/share/keyrings/oneapi-archive-keyring.gpg] https://apt.repos.intel.com/oneapi all main" | sudo tee /etc/apt/sources.list.d/oneAPI.list
           
-          sudo apt-get update && sudo apt install libasound2-dev libx11-dev libxinerama-dev libxext-dev libfreetype6-dev libwebkit2gtk-4.1-dev libglu1-mesa-dev xvfb ninja-build intel-oneapi-ipp-devel
+          sudo apt-get update && sudo apt install libasound2-dev libx11-dev libxinerama-dev libxext-dev libfreetype6-dev libwebkit2gtk-4.1-dev libglu1-mesa-dev xvfb ninja-build intel-oneapi-ipp-devel libxss-dev
           sudo /usr/bin/Xvfb $DISPLAY & 
 
       - name: Install IPP (Windows)
@@ -79,7 +79,9 @@ jobs:
 
       - name: Install macOS Deps
         if: ${{ runner.os == 'macOS' }}
-        run: brew install ninja osxutils
+        run: |
+          brew install ninja osxutils
+          pip install dmgbuild
 
       - name: Checkout code
         uses: actions/checkout@v6
@@ -164,6 +166,7 @@ jobs:
         if: ${{ runner.os == 'macOS' }}
         timeout-minutes: 5
         run: |
+          VERSION=${{ env.VERSION }}
           pkgbuild --identifier "${{ env.BUNDLE_ID }}.au.pkg" --version $VERSION --component "${{ env.AU_PATH }}" --install-location "/Library/Audio/Plug-Ins/Components"  "packaging/${{ env.PRODUCT_NAME }}.au.pkg"
           pkgbuild --identifier "${{ env.BUNDLE_ID }}.vst3.pkg" --version $VERSION --component "${{ env.VST3_PATH }}" --install-location "/Library/Audio/Plug-Ins/VST3" "packaging/${{ env.PRODUCT_NAME }}.vst3.pkg"
           pkgbuild --identifier "${{ env.BUNDLE_ID }}.clap.pkg" --version $VERSION --component "${{ env.CLAP_PATH }}" --install-location "/Library/Audio/Plug-Ins/CLAP" "packaging/${{ env.PRODUCT_NAME }}.clap.pkg"
@@ -179,6 +182,33 @@ jobs:
 
           xcrun notarytool submit "${{ env.ARTIFACT_NAME }}.pkg" --apple-id ${{ secrets.NOTARIZATION_USERNAME }} --password ${{ secrets.NOTARIZATION_PASSWORD }} --team-id ${{ secrets.TEAM_ID }} --wait
           xcrun stapler staple "${{ env.ARTIFACT_NAME }}.pkg"
+
+      - name: Create DMG (macOS)
+        if: ${{ runner.os == 'macOS' }}
+        run: |
+          mkdir -p dmg
+          cp -r "${{ env.STANDALONE_PATH }}" "dmg/${{ env.PRODUCT_NAME }}.app"
+          cp -r "${{ env.AU_PATH }}" "dmg/${{ env.PRODUCT_NAME }}.component"
+          cp -r "${{ env.VST3_PATH }}" "dmg/${{ env.PRODUCT_NAME }}.vst3"
+          # Create symlinks for easier access
+          ln -s /Applications "dmg/Applications"
+          ln -s /Library/Audio/Plug-Ins/Components "dmg/Your Mac's Component Folder"
+          ln -s /Library/Audio/Plug-Ins/VST3 "dmg/Your Mac's VST3 Folder"
+          
+          # dmg.json expects exactly these names, so we ensure they match
+          # Since dmgbuild uses the title from json if not provided, or we can provide it.
+          dmgbuild -s packaging/dmg.json "${{ env.PRODUCT_NAME }}" "packaging/${{ env.ARTIFACT_NAME }}.dmg"
+
+      - name: Codesign DMG (macOS)
+        if: ${{ runner.os == 'macOS' }}
+        run: |
+          codesign --force --keychain ${{ steps.keychain.outputs.keychain-path }} -s "${{ secrets.DEVELOPER_ID_APPLICATION}}" -v "packaging/${{ env.ARTIFACT_NAME }}.dmg" --deep --strict --options=runtime --timestamp
+
+      - name: Notarize DMG (macOS)
+        if: ${{ runner.os == 'macOS' }}
+        run: |
+          xcrun notarytool submit "packaging/${{ env.ARTIFACT_NAME }}.dmg" --apple-id ${{ secrets.NOTARIZATION_USERNAME }} --password ${{ secrets.NOTARIZATION_PASSWORD }} --team-id ${{ secrets.TEAM_ID }} --wait
+          xcrun stapler staple "packaging/${{ env.ARTIFACT_NAME }}.dmg"
 
       - name: Zip
         if: ${{ runner.os == 'Linux' }}
@@ -230,6 +260,13 @@ jobs:
         with:
           name: ${{ env.ARTIFACT_NAME }}.zip
           path: "${{ env.ARTIFACTS_PATH }}/${{ env.ARTIFACT_NAME }}.zip"
+
+      - name: Upload dmg (macOS)
+        if: ${{ runner.os == 'macOS' }}
+        uses: actions/upload-artifact@v6
+        with:
+          name: ${{ env.ARTIFACT_NAME }}.dmg
+          path: packaging/${{ env.ARTIFACT_NAME }}.dmg
 
       - name: Upload pkg (macOS)
         if: ${{ runner.os == 'macOS' }}
