@@ -144,6 +144,7 @@ target_compile_definitions(SharedCode
 set(SDL_SHARED OFF CACHE BOOL "" FORCE)
 set(SDL_STATIC ON CACHE BOOL "" FORCE)
 set(SDL_TEST OFF CACHE BOOL "" FORCE)
+set(SDL_X11_XSCRNSAVER OFF CACHE BOOL "" FORCE)
 add_subdirectory(vendor/SDL EXCLUDE_FROM_ALL)
 
 target_include_directories(SharedCode
