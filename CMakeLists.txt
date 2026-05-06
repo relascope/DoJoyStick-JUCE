@@ -144,7 +144,22 @@ target_compile_definitions(SharedCode
 set(SDL_SHARED OFF CACHE BOOL "" FORCE)
 set(SDL_STATIC ON CACHE BOOL "" FORCE)
 set(SDL_TEST OFF CACHE BOOL "" FORCE)
-set(SDL_X11_XSCRNSAVER OFF CACHE BOOL "" FORCE)
+
+# We only need Joysticks, so disable everything else to minimize deps and avoid Linux linker issues
+set(SDL_AUDIO OFF CACHE BOOL "" FORCE)
+set(SDL_VIDEO OFF CACHE BOOL "" FORCE)
+set(SDL_RENDER OFF CACHE BOOL "" FORCE)
+set(SDL_CAMERA OFF CACHE BOOL "" FORCE)
+set(SDL_SENSOR OFF CACHE BOOL "" FORCE)
+set(SDL_POWER OFF CACHE BOOL "" FORCE)
+set(SDL_DIALOG OFF CACHE BOOL "" FORCE)
+set(SDL_TRAY OFF CACHE BOOL "" FORCE)
+set(SDL_X11 OFF CACHE BOOL "" FORCE)
+set(SDL_WAYLAND OFF CACHE BOOL "" FORCE)
+
+# Essential for linking static SDL into a shared plugin on Linux
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
 add_subdirectory(vendor/SDL EXCLUDE_FROM_ALL)
 
 target_include_directories(SharedCode
