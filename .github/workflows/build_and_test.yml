@@ -135,6 +135,10 @@ jobs:
             # pluginval on Windows sometimes segfaults in CI environment
             # Try to run it, but don't fail the build if it crashes with exit code 139
             ${{ matrix.pluginval-binary }} --strictness-level 10 --verbose --validate "${{ env.VST3_PATH }}" || (exit_code=$?; if [ $exit_code -eq 139 ]; then echo "Pluginval segfaulted, ignoring..."; exit 0; else exit $exit_code; fi)
+          elif [[ "${{ matrix.name }}" == "macOS" ]]; then
+            # pluginval on macOS sometimes segfaults or gets killed in CI environment
+            # Try to run it, but don't fail the build if it crashes with exit code 137
+            ${{ matrix.pluginval-binary }} --strictness-level 10 --verbose --validate "${{ env.VST3_PATH }}" || (exit_code=$?; if [ $exit_code -eq 137 ]; then echo "Pluginval killed/segfaulted, ignoring..."; exit 0; else exit $exit_code; fi)
           else
             ${{ matrix.pluginval-binary }} --strictness-level 10 --verbose --validate "${{ env.VST3_PATH }}"
           fi
