@@ -96,9 +96,9 @@ jobs:
       - name: Configure
         run: |
           if [[ "${{ matrix.name }}" == "macOS" ]]; then
-            # SDL and sccache sometimes struggle with -Xarch and multi-arch headers
-            # We'll disable PCH for SDL to avoid the -Xarch issues
-            cmake -B ${{ env.BUILD_DIR }} -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE}} -DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache ${{ matrix.extra-flags }} -DSDL_PCH=OFF .
+            # SDL and sccache struggle with -Xarch and multi-arch headers when PCH is enabled.
+            # We'll disable PCH globally for the project to avoid these issues.
+            cmake -B ${{ env.BUILD_DIR }} -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE}} -DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache ${{ matrix.extra-flags }} -DCMAKE_DISABLE_PRECOMPILE_HEADERS=ON .
           else
             cmake -B ${{ env.BUILD_DIR }} -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE}} -DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache ${{ matrix.extra-flags }} .
           fi
