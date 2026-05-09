@@ -72,3 +72,11 @@ std::string JoyStickGateway::getJoystickName(int index) const
     else
         return "Invalid joystick index";
 }
+
+int JoyStickGateway::getNumButtons(int index) const
+{
+    if (index >= 0 && index < (int)openJoysticks.size())
+        return SDL_GetNumJoystickButtons(openJoysticks[index]);
+    else
+        return 0;
+}

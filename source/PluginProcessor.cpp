@@ -13,6 +13,7 @@ PluginProcessor::PluginProcessor()
                        )
 {
     joyStickGateway.addListener (&joyStickMediator);
+    joyStickMediator.addDefaultMappings();
 }
 
 PluginProcessor::~PluginProcessor()
@@ -169,6 +170,7 @@ void PluginProcessor::getStateInformation (juce::MemoryBlock& destData)
     juce::ValueTree state ("Settings");
     state.setProperty ("sendToMidiPort", joyStickMediator.isSendingToMidiPort(), nullptr);
     state.setProperty ("sendToSeparateDevice", joyStickMediator.isSendingToSeparateDevice(), nullptr);
+    state.addChild (joyStickMapper.toValueTree(), -1, nullptr);
     
     std::unique_ptr<juce::XmlElement> xml (state.createXml());
     copyXmlToBinary (*xml, destData);
@@ -185,6 +187,10 @@ void PluginProcessor::setStateInformation (const void* data, int sizeInBytes)
         {
             joyStickMediator.setSendToMidiPort (state.getProperty ("sendToMidiPort", true));
             joyStickMediator.setSendToSeparateDevice (state.getProperty ("sendToSeparateDevice", true));
+            
+            auto mappingsTree = state.getChildWithName ("Mappings");
+            if (mappingsTree.isValid())
+                joyStickMapper.fromValueTree (mappingsTree);
         }
     }
 }

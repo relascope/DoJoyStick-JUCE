@@ -7,11 +7,31 @@
 class JoyStickMidiMediator : public JoyStickGateway::Listener
 {
 public:
-    JoyStickMidiMediator (JoyStickMapper& m) : mapper (m)
+    JoyStickMidiMediator (JoyStickMapper& m, JoyStickGateway& g) : mapper (m), gateway (g)
     {
         // Create a virtual MIDI out port that other apps can see
         // This works on macOS. On Windows, it returns nullptr (requires a driver like loopMIDI)
         virtualMidiOutput = juce::MidiOutput::createNewDevice ("DoJoyStick Port");
+    }
+
+    void addDefaultMappings()
+    {
+        if (! mapper.getMappings().empty())
+            return;
+
+        int numJoysticks = gateway.getNumJoysticks();
+        if (numJoysticks == 0)
+            return;
+
+        // We add default mappings for the first joystick found
+        int numButtons = gateway.getNumButtons (0);
+        // Limit to 21 as in original code
+        int buttonsToAdd = std::min (numButtons, 21);
+
+        for (int i = 0; i < buttonsToAdd; ++i)
+        {
+            mapper.addMapping ({ i, 36 + i });
+        }
     }
 
     void sendMidiMessage(juce::MidiMessage msg)
@@ -61,6 +81,7 @@ public:
 
 private:
     JoyStickMapper& mapper;
+    JoyStickGateway& gateway;
     juce::MidiMessageCollector messageCollector;
     std::unique_ptr<juce::MidiOutput> virtualMidiOutput;
     bool sendToMidiPort = true;

@@ -42,11 +42,13 @@ public:
     void setStateInformation (const void* data, int sizeInBytes) override;
 
     JoyStickMidiMediator& getMidiMediator() { return joyStickMediator; }
+    JoyStickMapper& getMapper() { return joyStickMapper; }
+    JoyStickGateway& getGateway() { return joyStickGateway; }
 
 private:
     JoyStickGateway joyStickGateway;
     JoyStickMapper joyStickMapper;
-    JoyStickMidiMediator joyStickMediator { joyStickMapper };
+    JoyStickMidiMediator joyStickMediator { joyStickMapper, joyStickGateway };
     std::vector<bool> lastButtonStates;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PluginProcessor)

@@ -26,6 +26,7 @@ public:
 
     int getNumJoysticks() const;
     std::string getJoystickName (int index) const;
+    int getNumButtons (int index) const;
 
 private:
     void timerCallback() override; // Replaces run()
