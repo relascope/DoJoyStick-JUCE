@@ -163,6 +163,9 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 add_subdirectory(vendor/SDL EXCLUDE_FROM_ALL)
 add_subdirectory(vendor/keyboard-auto-type EXCLUDE_FROM_ALL)
+if (UNIX AND NOT APPLE)
+    target_compile_options(keyboard-auto-type PRIVATE -fbracket-depth=1024)
+endif()
 
 target_include_directories(SharedCode
         INTERFACE
