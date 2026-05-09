@@ -13,12 +13,14 @@ PluginProcessor::PluginProcessor()
                        )
 {
     joyStickGateway.addListener (&joyStickMediator);
+    joyStickGateway.addListener (&keyboardMediator);
     joyStickMediator.addDefaultMappings();
 }
 
 PluginProcessor::~PluginProcessor()
 {
     joyStickGateway.removeListener (&joyStickMediator);
+    joyStickGateway.removeListener (&keyboardMediator);
 }
 
 //==============================================================================

@@ -81,15 +81,44 @@ void JoyStickConfigWidget::buttonChanged (int /*joystickIndex*/, int buttonIndex
             addMappingButton.setButtonText ("Select Midi Note for Button " + juce::String(buttonIndex));
             
             auto* menu = new juce::PopupMenu();
+            
+            juce::PopupMenu midiMenu;
             for (int i = 0; i < 128; ++i)
             {
-                menu->addItem (i + 1, juce::String(i) + " (" + juce::MidiMessage::getMidiNoteName(i, true, true, 3) + ")");
+                midiMenu.addItem (i + 1, juce::String(i) + " (" + juce::MidiMessage::getMidiNoteName(i, true, true, 3) + ")");
             }
+            menu->addSubMenu ("Midi Note", midiMenu);
+            menu->addItem (200, "Keyboard Shortcut...");
             
             menu->showMenuAsync (juce::PopupMenu::Options(), [this, buttonIndex](int result) {
                 if (result > 0)
                 {
-                    mapper.addMapping ({ buttonIndex, result - 1 });
+                    if (result <= 128)
+                    {
+                        // MIDI Note selected
+                        mapper.addMapping ({ buttonIndex, result - 1, "" });
+                    }
+                    else if (result == 200)
+                    {
+                        // Keyboard shortcut requested
+                        auto* aw = new juce::AlertWindow ("Keyboard Shortcut", 
+                                                         "Enter the character or text to send.\n"
+                                                         "Examples: 'a', 'F1', 'cmd+space', 'alt+tab', 'pos1'.", 
+                                                         juce::MessageBoxIconType::NoIcon);
+                        aw->addTextEditor ("shortcut", "", "Shortcut:");
+                        aw->addButton ("OK", 1, juce::KeyPress (juce::KeyPress::returnKey));
+                        aw->addButton ("Cancel", 0, juce::KeyPress (juce::KeyPress::escapeKey));
+                        
+                        aw->enterModalState (true, juce::ModalCallbackFunction::create ([this, buttonIndex, aw] (int alertResult) {
+                            if (alertResult == 1)
+                            {
+                                auto shortcut = aw->getTextEditorContents ("shortcut");
+                                if (shortcut.isNotEmpty())
+                                    mapper.addMapping ({ buttonIndex, 0, shortcut });
+                            }
+                            delete aw;
+                        }));
+                    }
                 }
                 stopLearning();
             });

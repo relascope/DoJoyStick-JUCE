@@ -30,7 +30,7 @@ public:
 
         for (int i = 0; i < buttonsToAdd; ++i)
         {
-            mapper.addMapping ({ i, 36 + i });
+            mapper.addMapping ({ i, 36 + i, "" });
         }
     }
 
@@ -48,7 +48,7 @@ public:
     {
         for (const auto& m : mapper.getMappings())
         {
-            if (m.buttonIndex == buttonIndex)
+            if (m.buttonIndex == buttonIndex && m.midiNote > 0)
             {
                 auto msg = isDown ? juce::MidiMessage::noteOn (1, m.midiNote, (juce::uint8)127)
                                   : juce::MidiMessage::noteOff (1, m.midiNote, (juce::uint8)0);

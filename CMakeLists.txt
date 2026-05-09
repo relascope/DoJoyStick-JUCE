@@ -162,10 +162,12 @@ set(SDL_UNIX_CONSOLE_BUILD ON CACHE BOOL "" FORCE)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 add_subdirectory(vendor/SDL EXCLUDE_FROM_ALL)
+add_subdirectory(vendor/keyboard-auto-type EXCLUDE_FROM_ALL)
 
 target_include_directories(SharedCode
         INTERFACE
         ${CMAKE_CURRENT_SOURCE_DIR}/vendor/SDL/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/vendor/keyboard-auto-type/keyboard-auto-type/include
 )
 
 # Link to any other modules you added (with juce_add_module) here!
@@ -185,7 +187,8 @@ target_link_libraries(SharedCode
     juce::juce_recommended_config_flags
     juce::juce_recommended_lto_flags
     juce::juce_recommended_warning_flags
-    SDL3::SDL3-static)
+    SDL3::SDL3-static
+    keyboard-auto-type)
 
 # Link the JUCE plugin targets our SharedCode target
 target_link_libraries("${PROJECT_NAME}" PRIVATE SharedCode)

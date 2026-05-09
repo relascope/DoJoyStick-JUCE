@@ -38,6 +38,7 @@ juce::ValueTree JoyStickMapper::toValueTree() const
         juce::ValueTree child ("Mapping");
         child.setProperty ("buttonIndex", m.buttonIndex, nullptr);
         child.setProperty ("midiNote", m.midiNote, nullptr);
+        child.setProperty ("keyboardShortcut", m.keyboardShortcut, nullptr);
         v.addChild (child, -1, nullptr);
     }
     return v;
@@ -51,7 +52,9 @@ void JoyStickMapper::fromValueTree (const juce::ValueTree& v)
         auto child = v.getChild (i);
         if (child.hasType ("Mapping"))
         {
-            mappings.push_back ({ (int) child.getProperty ("buttonIndex"), (int) child.getProperty ("midiNote") });
+            mappings.push_back ({ (int) child.getProperty ("buttonIndex"), 
+                                  (int) child.getProperty ("midiNote"),
+                                  child.getProperty ("keyboardShortcut").toString() });
         }
     }
     sendChangeMessage();

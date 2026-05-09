@@ -7,10 +7,11 @@ struct JoyStickMapping
 {
     int buttonIndex;
     int midiNote;
+    juce::String keyboardShortcut; // Added keyboardShortcut
 
     bool operator==(const JoyStickMapping& other) const
     {
-        return buttonIndex == other.buttonIndex && midiNote == other.midiNote;
+        return buttonIndex == other.buttonIndex && midiNote == other.midiNote && keyboardShortcut == other.keyboardShortcut;
     }
 };
 

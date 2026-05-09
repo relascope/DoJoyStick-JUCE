@@ -17,3 +17,6 @@
 [submodule "vendor/SDL"]
 	path = vendor/SDL
 	url = https://github.com/relascope/SDL.git
+[submodule "vendor/keyboard-auto-type"]
+	path = vendor/keyboard-auto-type
+	url = https://github.com/relascope/keyboard-auto-type

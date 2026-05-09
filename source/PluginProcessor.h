@@ -4,6 +4,8 @@
 #include "JoyStickGateway.h"
 #include "JoyStickMapper.h"
 #include "JoyStickMidiMediator.h"
+#include "KeyboardGateway.h"
+#include "JoyStickKeyboardMediator.h"
 
 #if (MSVC)
 #include "ipps.h"
@@ -42,6 +44,7 @@ public:
     void setStateInformation (const void* data, int sizeInBytes) override;
 
     JoyStickMidiMediator& getMidiMediator() { return joyStickMediator; }
+    JoyStickKeyboardMediator& getKeyboardMediator() { return keyboardMediator; }
     JoyStickMapper& getMapper() { return joyStickMapper; }
     JoyStickGateway& getGateway() { return joyStickGateway; }
 
@@ -49,6 +52,8 @@ private:
     JoyStickGateway joyStickGateway;
     JoyStickMapper joyStickMapper;
     JoyStickMidiMediator joyStickMediator { joyStickMapper, joyStickGateway };
+    KeyboardGateway keyboardGateway;
+    JoyStickKeyboardMediator keyboardMediator { joyStickMapper, keyboardGateway };
     std::vector<bool> lastButtonStates;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PluginProcessor)
